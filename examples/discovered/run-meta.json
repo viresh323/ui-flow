@@ -1,0 +1,13 @@
+{
+  "runId": "run_mtzwn3f6",
+  "goal": "Log in as the operator, then read the current balance for account 12345 from the accounts overview",
+  "entryPath": "/parabank/index.htm",
+  "capabilityId": "read_account_balance_v2",
+  "parameterValues": {
+    "account_id": "12345"
+  },
+  "surface": "web",
+  "model": "gemini:gemini-3.6-flash",
+  "finalTitle": "ParaBank | Accounts Overview",
+  "finalUrl": "http://localhost:8080/parabank/overview.htm"
+}

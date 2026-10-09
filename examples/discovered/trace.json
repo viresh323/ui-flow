@@ -1,0 +1,134 @@
+[
+  {
+    "stepIndex": 0,
+    "intent": "Type the operator username into the username field",
+    "action": {
+      "do": "type",
+      "ref": "e34",
+      "value": {
+        "$secret": "tenant.parabank.operator_user"
+      },
+      "harvested": {
+        "tagName": "input",
+        "role": "textbox",
+        "accessibleName": null,
+        "labelText": "Username",
+        "fieldName": "username",
+        "formName": "login",
+        "tablePosition": null,
+        "cssPath": "input[name=\"username\"]",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/index.htm",
+      "title": "ParaBank | Welcome | Online Banking"
+    },
+    "outcome": "ok",
+    "at": "2026-09-13T14:24:05.418Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 1,
+    "intent": "Type the operator password into the password field",
+    "action": {
+      "do": "type",
+      "ref": "e37",
+      "value": {
+        "$secret": "tenant.parabank.operator_password"
+      },
+      "harvested": {
+        "tagName": "input",
+        "role": "textbox",
+        "accessibleName": null,
+        "labelText": "Password",
+        "fieldName": "password",
+        "formName": "login",
+        "tablePosition": null,
+        "cssPath": "input[name=\"password\"]",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/index.htm",
+      "title": "ParaBank | Welcome | Online Banking"
+    },
+    "outcome": "ok",
+    "at": "2026-09-13T14:24:08.910Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 2,
+    "intent": "Click the Log In button to submit the login form.",
+    "action": {
+      "do": "click",
+      "ref": "e39",
+      "harvested": {
+        "tagName": "input",
+        "role": "button",
+        "accessibleName": "Log In",
+        "labelText": "Password",
+        "fieldName": null,
+        "formName": "login",
+        "tablePosition": null,
+        "cssPath": "form[name=\"login\"] > div:nth-of-type(3) > input",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/index.htm",
+      "title": "ParaBank | Welcome | Online Banking"
+    },
+    "outcome": "ok",
+    "at": "2026-09-13T14:24:13.078Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 3,
+    "intent": "Read the current balance for account 12345 from the accounts overview table",
+    "action": {
+      "do": "read",
+      "ref": "f1e62",
+      "into": "account_12345_balance",
+      "harvested": {
+        "tagName": "td",
+        "role": "cell",
+        "accessibleName": null,
+        "labelText": "12345",
+        "fieldName": null,
+        "formName": null,
+        "tablePosition": {
+          "columnHeader": "Balance*",
+          "rowKeyHeader": "Account",
+          "rowKeyValue": "12345"
+        },
+        "cssPath": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+        "ownText": "-$2300.00"
+      },
+      "captured": "-$2300.00"
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/overview.htm",
+      "title": "ParaBank | Accounts Overview"
+    },
+    "outcome": "ok",
+    "at": "2026-09-13T14:24:19.272Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  }
+]

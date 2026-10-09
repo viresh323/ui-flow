@@ -1,0 +1,13 @@
+{
+  "runId": "run_mu2gmanu",
+  "goal": "Log in as the operator. Then use the 'Open New Account' page to open a new SAVINGS account funded from existing account 12345, submit it, and read the new account number shown on the confirmation screen.",
+  "entryPath": "/parabank/index.htm",
+  "capabilityId": "open_savings_account",
+  "parameterValues": {
+    "funding_account_id": "12345"
+  },
+  "surface": "web",
+  "model": "gemini:gemini-3-flash-preview",
+  "finalTitle": "ParaBank | Open Account",
+  "finalUrl": "http://localhost:8080/parabank/openaccount.htm"
+}

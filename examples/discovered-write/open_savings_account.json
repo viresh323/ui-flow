@@ -1,0 +1,574 @@
+{
+  "kind": "capability",
+  "schemaVersion": "1.0.0",
+  "id": "open_savings_account",
+  "version": "1.0.0",
+  "name": "Open savings account",
+  "description": "Log in as the operator. Then use the 'Open New Account' page to open a new SAVINGS account funded from existing account 12345, submit it, and read the new account number shown on the confirmation screen.",
+  "surface": "web",
+  "app": {
+    "product": "parabank",
+    "productVersionRange": "*",
+    "entryPoint": {
+      "path": "/parabank/index.htm",
+      "requiresSession": true
+    }
+  },
+  "contract": {
+    "inputs": [
+      {
+        "name": "funding_account_id",
+        "description": "Supplied per invocation (observed as \"12345\" during discovery)",
+        "type": {
+          "kind": "string"
+        },
+        "required": true,
+        "sensitivity": "pii"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "new_account_number",
+        "description": "Read the new account number from the confirmation screen.",
+        "type": {
+          "kind": "string"
+        },
+        "sensitivity": "pii",
+        "fromBinding": "new_account_number",
+        "transforms": [
+          {
+            "op": "trim"
+          }
+        ],
+        "required": true
+      }
+    ],
+    "outcomes": []
+  },
+  "flow": {
+    "steps": [
+      {
+        "id": "type_0",
+        "intent": "Enter the operator username to log in.",
+        "action": {
+          "do": "type",
+          "target": {
+            "id": "type_0_target",
+            "describe": "textbox labelled \"Username\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Username",
+                  "controlRole": "textbox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              },
+              {
+                "candidate": {
+                  "using": "field_name",
+                  "name": "username",
+                  "formName": "login"
+                },
+                "confidence": 0.8,
+                "rationale": "Server-rendered form field name; stable across versions of the same vendor product."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "input[name=\"username\"]"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "secret",
+            "secret": "tenant.parabank.operator_user"
+          },
+          "sensitivity": "secret",
+          "clearFirst": true
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "type_1",
+        "intent": "Enter the operator username to log in.",
+        "action": {
+          "do": "type",
+          "target": {
+            "id": "type_1_target",
+            "describe": "textbox labelled \"Username\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Username",
+                  "controlRole": "textbox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              },
+              {
+                "candidate": {
+                  "using": "field_name",
+                  "name": "username",
+                  "formName": "login"
+                },
+                "confidence": 0.8,
+                "rationale": "Server-rendered form field name; stable across versions of the same vendor product."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "input[name=\"username\"]"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "secret",
+            "secret": "tenant.parabank.operator_user"
+          },
+          "sensitivity": "secret",
+          "clearFirst": true
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "type_2",
+        "intent": "Enter the operator password to log in.",
+        "action": {
+          "do": "type",
+          "target": {
+            "id": "type_2_target",
+            "describe": "textbox labelled \"Password\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Password",
+                  "controlRole": "textbox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              },
+              {
+                "candidate": {
+                  "using": "field_name",
+                  "name": "password",
+                  "formName": "login"
+                },
+                "confidence": 0.8,
+                "rationale": "Server-rendered form field name; stable across versions of the same vendor product."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "input[name=\"password\"]"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "secret",
+            "secret": "tenant.parabank.operator_password"
+          },
+          "sensitivity": "secret",
+          "clearFirst": true
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "click_3",
+        "intent": "Click the Log In button to authenticate as the operator.",
+        "action": {
+          "do": "click",
+          "target": {
+            "id": "click_3_target",
+            "describe": "button \"Log In\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "role_name",
+                  "role": "button",
+                  "name": "Log In",
+                  "exact": true
+                },
+                "confidence": 0.9,
+                "rationale": "Role plus accessible name; the most portable strategy and the one that ports to a desktop surface."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "form[name=\"login\"] > div:nth-of-type(3) > input"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          }
+        },
+        "risk": "reversible",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "click_4",
+        "intent": "Navigate to the 'Open New Account' page to begin the account opening process.",
+        "action": {
+          "do": "click",
+          "target": {
+            "id": "click_4_target",
+            "describe": "link \"Open New Account\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "role_name",
+                  "role": "link",
+                  "name": "Open New Account",
+                  "exact": true
+                },
+                "confidence": 0.9,
+                "rationale": "Role plus accessible name; the most portable strategy and the one that ports to a desktop surface."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul > li:nth-of-type(1) > a"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          }
+        },
+        "risk": "reversible",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "select_5",
+        "intent": "Select 'SAVINGS' as the account type for the new account.",
+        "action": {
+          "do": "select",
+          "target": {
+            "id": "select_5_target",
+            "describe": "combobox labelled \"What type of Account would you like to open?\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "What type of Account would you like to open?",
+                  "controlRole": "combobox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "div:nth-of-type(3) > div:nth-of-type(2) > div > div:nth-of-type(1) > form > select:nth-of-type(1)"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "literal",
+            "value": "SAVINGS"
+          }
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "click_6",
+        "intent": "Click the 'Open New Account' button to create the new savings account funded from account 12345.",
+        "action": {
+          "do": "click",
+          "target": {
+            "id": "click_6_target",
+            "describe": "button \"Open New Account\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "role_name",
+                  "role": "button",
+                  "name": "Open New Account",
+                  "exact": true
+                },
+                "confidence": 0.9,
+                "rationale": "Role plus accessible name; the most portable strategy and the one that ports to a desktop surface."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > form > div > input"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          }
+        },
+        "risk": "irreversible",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "read_7",
+        "intent": "Read the new account number from the confirmation screen.",
+        "action": {
+          "do": "read",
+          "target": {
+            "id": "read_7_target",
+            "describe": "link labelled \"Your new account number:\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Your new account number:",
+                  "controlRole": "link",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "div:nth-of-type(3) > div:nth-of-type(2) > div > div:nth-of-type(2) > p:nth-of-type(2) > a"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "source": "text",
+          "into": "new_account_number",
+          "transforms": []
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      }
+    ],
+    "checkpoint": {
+      "description": "Final screen reached: ParaBank | Open Account",
+      "assert": {
+        "assert": "url_matches",
+        "pattern": "/parabank/openaccount\\.htm"
+      }
+    }
+  },
+  "recoveries": [],
+  "policy": {
+    "maxRisk": "irreversible",
+    "requires": {
+      "origins": [
+        "http://localhost:8080"
+      ],
+      "pathPrefixes": [
+        "/parabank/"
+      ],
+      "actions": [
+        "type",
+        "click",
+        "select",
+        "read"
+      ],
+      "secrets": [
+        "tenant.parabank.operator_user",
+        "tenant.parabank.operator_password"
+      ]
+    },
+    "irreversibleStepPolicy": "require_human_confirmation",
+    "returnsDataClasses": [
+      "public",
+      "internal",
+      "pii"
+    ]
+  },
+  "escalation": {
+    "on": [
+      "locator_unresolved",
+      "locator_ambiguous",
+      "unknown_condition",
+      "recovery_exhausted"
+    ],
+    "holdSessionMs": 900000,
+    "allowResume": true
+  },
+  "provenance": {
+    "discoveryRunId": "run_mu2gmanu",
+    "transcriptSha256": "8fb1a4f48a723ac124d04216472a46e100265fd50f60268952bb7fb55d0a52ce",
+    "model": "gemini:gemini-3-flash-preview",
+    "recordedAt": "2026-09-19T07:21:17.330Z",
+    "review": {
+      "status": "draft"
+    }
+  },
+  "integrity": {
+    "contentSha256": "490c0c2ecb3872f38ba6eaa6e9ccaafd06d45b2c681655da84a8b3ed9940ccfa"
+  }
+}

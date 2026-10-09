@@ -1,0 +1,531 @@
+{
+  "kind": "capability",
+  "schemaVersion": "1.0.0",
+  "id": "read_account_balance",
+  "version": "1.0.0",
+  "name": "Read account balance",
+  "description": "Signs in as the configured operator and returns the current balance for a given account number from the Accounts Overview screen. Read-only.",
+  "surface": "web",
+  "app": {
+    "product": "parabank",
+    "productVersionRange": "*",
+    "entryPoint": {
+      "path": "/parabank/index.htm",
+      "requiresSession": true
+    }
+  },
+  "contract": {
+    "inputs": [
+      {
+        "name": "account_id",
+        "description": "The account number to read",
+        "type": {
+          "kind": "account_number"
+        },
+        "required": true,
+        "sensitivity": "pii"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "balance",
+        "description": "Current balance",
+        "type": {
+          "kind": "money",
+          "currency": "USD"
+        },
+        "sensitivity": "pii",
+        "fromBinding": "balance_text",
+        "transforms": [
+          {
+            "op": "trim"
+          },
+          {
+            "op": "strip_currency"
+          },
+          {
+            "op": "to_number"
+          }
+        ],
+        "required": true
+      }
+    ],
+    "outcomes": [
+      {
+        "code": "LOGIN_FAILED",
+        "description": "Operator credentials rejected by the application.",
+        "detect": {
+          "assert": "text_matches",
+          "pattern": "could not be verified",
+          "flags": "i"
+        },
+        "outputs": [],
+        "terminal": true,
+        "appliesTo": [
+          "submit_login"
+        ]
+      },
+      {
+        "code": "ACCOUNT_NOT_FOUND",
+        "description": "The requested account is not visible to this operator. A legitimate answer, not a failure.",
+        "detect": {
+          "assert": "not",
+          "of": {
+            "assert": "element_present",
+            "locator": {
+              "id": "balance_cell",
+              "describe": "Balance column for the requested account in the Accounts Overview grid",
+              "region": {
+                "framePath": []
+              },
+              "candidates": [
+                {
+                  "candidate": {
+                    "using": "table_cell",
+                    "rowMatch": {
+                      "columnHeader": "Account",
+                      "equals": "${account_id}"
+                    },
+                    "columnHeader": "Balance"
+                  },
+                  "confidence": 0.9,
+                  "rationale": "Header-relative intersection; independent of row order, paging and column count."
+                },
+                {
+                  "candidate": {
+                    "using": "near_anchor",
+                    "anchorText": "${account_id}",
+                    "targetRole": "cell"
+                  },
+                  "confidence": 0.55
+                }
+              ],
+              "match": {
+                "requireUnique": true,
+                "minConfidence": 0.4,
+                "onMultiple": "fail"
+              }
+            }
+          }
+        },
+        "outputs": [],
+        "terminal": true,
+        "appliesTo": [
+          "read_balance"
+        ]
+      }
+    ]
+  },
+  "flow": {
+    "steps": [
+      {
+        "id": "open_login",
+        "intent": "Open the ParaBank login page",
+        "action": {
+          "do": "navigate",
+          "url": {
+            "from": "literal",
+            "value": "/parabank/index.htm"
+          }
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [
+          {
+            "assert": "text_matches",
+            "pattern": "Customer Login",
+            "flags": "i"
+          }
+        ],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "enter_username",
+        "intent": "Type the operator username",
+        "action": {
+          "do": "type",
+          "target": {
+            "id": "username_field",
+            "describe": "Username input on the customer login panel",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Username",
+                  "controlRole": "textbox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Visible label text; survives CSS/branding changes and id churn."
+              },
+              {
+                "candidate": {
+                  "using": "field_name",
+                  "name": "username",
+                  "formName": "login"
+                },
+                "confidence": 0.8,
+                "rationale": "Server-rendered form field name; stable across versions of the vendor product."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "form[name=login] input[type=text]"
+                },
+                "confidence": 0.5,
+                "rationale": "Structural fallback."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "secret",
+            "secret": "tenant.parabank.operator_user"
+          },
+          "sensitivity": "secret",
+          "clearFirst": true
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "enter_password",
+        "intent": "Type the operator password",
+        "action": {
+          "do": "type",
+          "target": {
+            "id": "password_field",
+            "describe": "Password input on the customer login panel",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Password",
+                  "controlRole": "textbox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85
+              },
+              {
+                "candidate": {
+                  "using": "field_name",
+                  "name": "password",
+                  "formName": "login"
+                },
+                "confidence": 0.8
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "secret",
+            "secret": "tenant.parabank.operator_password"
+          },
+          "sensitivity": "secret",
+          "clearFirst": true
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "submit_login",
+        "intent": "Submit the login form",
+        "action": {
+          "do": "click",
+          "target": {
+            "id": "login_button",
+            "describe": "Log In submit button",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "role_name",
+                  "role": "button",
+                  "name": "Log In",
+                  "exact": true
+                },
+                "confidence": 0.8
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "form[name=login] input[type=submit]"
+                },
+                "confidence": 0.6
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          }
+        },
+        "risk": "reversible",
+        "preconditions": [],
+        "postconditions": [
+          {
+            "assert": "any",
+            "of": [
+              {
+                "assert": "text_matches",
+                "pattern": "Accounts Overview",
+                "flags": "i"
+              },
+              {
+                "assert": "text_matches",
+                "pattern": "could not be verified",
+                "flags": "i"
+              }
+            ]
+          }
+        ],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "read_balance",
+        "intent": "Read the Balance cell for the requested account",
+        "action": {
+          "do": "read",
+          "target": {
+            "id": "balance_cell",
+            "describe": "Balance column for the requested account in the Accounts Overview grid",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "table_cell",
+                  "rowMatch": {
+                    "columnHeader": "Account",
+                    "equals": "${account_id}"
+                  },
+                  "columnHeader": "Balance"
+                },
+                "confidence": 0.9,
+                "rationale": "Header-relative intersection; independent of row order, paging and column count."
+              },
+              {
+                "candidate": {
+                  "using": "near_anchor",
+                  "anchorText": "${account_id}",
+                  "targetRole": "cell"
+                },
+                "confidence": 0.55
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "source": "text",
+          "into": "balance_text",
+          "transforms": []
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      }
+    ],
+    "checkpoint": {
+      "description": "Accounts Overview is displayed and a balance was read for the requested account.",
+      "assert": {
+        "assert": "all",
+        "of": [
+          {
+            "assert": "text_matches",
+            "pattern": "Accounts Overview",
+            "flags": "i"
+          },
+          {
+            "assert": "element_present",
+            "locator": {
+              "id": "balance_cell",
+              "describe": "Balance column for the requested account in the Accounts Overview grid",
+              "region": {
+                "framePath": []
+              },
+              "candidates": [
+                {
+                  "candidate": {
+                    "using": "table_cell",
+                    "rowMatch": {
+                      "columnHeader": "Account",
+                      "equals": "${account_id}"
+                    },
+                    "columnHeader": "Balance"
+                  },
+                  "confidence": 0.9,
+                  "rationale": "Header-relative intersection; independent of row order, paging and column count."
+                },
+                {
+                  "candidate": {
+                    "using": "near_anchor",
+                    "anchorText": "${account_id}",
+                    "targetRole": "cell"
+                  },
+                  "confidence": 0.55
+                }
+              ],
+              "match": {
+                "requireUnique": true,
+                "minConfidence": 0.4,
+                "onMultiple": "fail"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "recoveries": [
+    {
+      "code": "SESSION_EXPIRED",
+      "description": "Session cookie dropped; the app bounced us back to the login screen mid-flow.",
+      "detect": {
+        "assert": "text_matches",
+        "pattern": "Customer Login",
+        "flags": "i"
+      },
+      "handle": {
+        "strategy": "reenter",
+        "fromStepId": "enter_username"
+      },
+      "maxAttempts": 2,
+      "appliesTo": [
+        "read_balance"
+      ]
+    },
+    {
+      "code": "TRANSIENT_APP_ERROR",
+      "description": "Intermittent 500 / error page from the application server.",
+      "detect": {
+        "assert": "text_matches",
+        "pattern": "an internal error has occurred",
+        "flags": "i"
+      },
+      "handle": {
+        "strategy": "retry_step",
+        "backoffMs": 2000
+      },
+      "maxAttempts": 3,
+      "appliesTo": "all_steps"
+    }
+  ],
+  "policy": {
+    "maxRisk": "reversible",
+    "requires": {
+      "origins": [
+        "https://parabank.parasoft.com",
+        "http://localhost:8080"
+      ],
+      "pathPrefixes": [
+        "/parabank/"
+      ],
+      "actions": [
+        "navigate",
+        "click",
+        "type",
+        "read"
+      ],
+      "secrets": [
+        "tenant.parabank.operator_user",
+        "tenant.parabank.operator_password"
+      ]
+    },
+    "irreversibleStepPolicy": "require_human_confirmation",
+    "returnsDataClasses": [
+      "public",
+      "internal",
+      "pii"
+    ]
+  },
+  "escalation": {
+    "on": [
+      "locator_unresolved",
+      "locator_ambiguous",
+      "unknown_condition",
+      "recovery_exhausted"
+    ],
+    "holdSessionMs": 900000,
+    "allowResume": true
+  },
+  "provenance": {
+    "discoveryRunId": "run_01JBX9",
+    "transcriptSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "model": "hand-written",
+    "recordedAt": "2026-09-06T12:00:00.000Z",
+    "review": {
+      "status": "draft"
+    }
+  },
+  "integrity": {
+    "contentSha256": "1b922e879904cb17b4eca3ebff64093df70f97fa27fca6aedfd72561d2294ea6"
+  }
+}

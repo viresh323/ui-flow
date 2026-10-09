@@ -1,0 +1,40 @@
+{
+  "name": "ui-flow",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "ui": "tsx src/ui/server.ts",
+    "discover": "tsx src/index.ts discover",
+    "replay": "tsx src/index.ts replay",
+    "build-example": "tsx examples/read_account_balance.ts",
+    "resolve-check": "tsx scripts/resolve-check.ts",
+    "taxonomy-check": "tsx scripts/taxonomy-check.ts",
+    "recompile": "tsx src/index.ts recompile",
+    "handoff-check": "tsx scripts/handoff-check.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "confirm-check": "tsx scripts/confirm-check.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Record a UI flow once with an LLM, replay it deterministically forever",
+  "dependencies": {
+    "@langchain/anthropic": "^1.5.10",
+    "@langchain/core": "^1.2.11",
+    "@langchain/google-genai": "^2.3.2",
+    "@langchain/langgraph": "^1.4.15",
+    "@langchain/langgraph-checkpoint-sqlite": "^1.0.4",
+    "commander": "^14.0.3",
+    "dotenv": "^17.4.2",
+    "headroom-ai": "^0.37.0",
+    "playwright": "^1.63.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
+  },
+  "type": "module"
+}

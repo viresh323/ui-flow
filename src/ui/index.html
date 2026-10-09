@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UIFlow</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --ink:#1B2430;--muted:#6A7179;--line:#E3E6E4;--bg:#F4F5F2;--card:#fff;--tint:#F3F5F7;
+  --teal:#0F766E;--teal-bg:#E6F4F1;--amber:#B45309;--amber-bg:#FDF1E1;
+  --red:#B42318;--red-bg:#FDECEA;--green:#15803D;--green-bg:#E7F5EC;--blue:#1D4ED8;--blue-bg:#E8EEFD;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.5 "Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:20px;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{font-weight:800;font-size:18px;letter-spacing:.2px}
+.brand span{color:var(--teal)}
+.tag{color:var(--muted);font-size:13px}
+nav{display:flex;gap:4px;margin-left:12px}
+nav button{border:0;background:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted)}
+nav button.on{background:var(--teal-bg);color:var(--teal)}
+.spacer{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--tint);color:var(--muted);white-space:nowrap}
+.chip.teal{background:var(--teal-bg);color:var(--teal)}
+.chip.amber{background:var(--amber-bg);color:var(--amber)}
+.chip.red{background:var(--red-bg);color:var(--red)}
+.chip.green{background:var(--green-bg);color:var(--green)}
+.chip.blue{background:var(--blue-bg);color:var(--blue)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+.dot.pulse{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+main{padding:20px 24px 80px}
+.run-grid{display:grid;grid-template-columns:330px minmax(0,1fr) 380px;gap:20px;align-items:start}
+@media(max-width:1280px){.run-grid{grid-template-columns:300px minmax(0,1fr)}.col-right{grid-column:1/-1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.card+.card{margin-top:16px}
+.card h3{margin:0 0 10px;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 4px}
+textarea,input[type=text],select{width:100%;padding:9px 11px;border:1px solid #cfd4d1;border-radius:9px;background:#fff}
+textarea{resize:vertical;min-height:92px}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--teal-bg);border-color:var(--teal)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--tint);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:none;padding:8px;border-radius:8px;font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--teal);color:#fff;width:100%;margin-top:16px}
+.btn:hover{filter:brightness(1.07)}
+.btn:disabled{background:#b9c2bf;cursor:not-allowed;filter:none}
+.btn.stop{background:var(--red)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid #cfd4d1;width:auto;margin-top:0;padding:7px 12px;font-size:13px}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.quick button{border:1px solid #cfd4d1;background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;cursor:pointer}
+.quick button:hover{border-color:var(--teal);color:var(--teal)}
+.toggle{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px}
+.toggle input{margin-top:3px}
+.toggle small{display:block;color:var(--muted);font-size:12px}
+
+/* live view */
+.screen{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.screen-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--tint)}
+.screen-bar .lights{display:flex;gap:6px}
+.screen-bar .lights i{width:10px;height:10px;border-radius:50%;background:#d3d8d5;display:block}
+.screen-bar .title{font-weight:600;font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.view{position:relative;aspect-ratio:16/10;background:#101418;display:flex;align-items:center;justify-content:center}
+.view img{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
+.view iframe{width:100%;height:100%;border:0;background:#fff}
+.placeholder{color:#8a949d;text-align:center;padding:24px;max-width:420px}
+.placeholder b{display:block;color:#d5dbe0;font-size:18px;margin-bottom:6px}
+.banner{display:none;padding:10px 14px;font-weight:600;font-size:13px}
+.banner.show{display:block}
+.banner.wait{background:var(--amber-bg);color:var(--amber)}
+.banner.human{background:var(--red-bg);color:var(--red)}
+.stages{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.stage{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--tint);color:#9aa3ad}
+.stage.on{background:var(--teal);color:#fff}
+.stage.done{background:var(--teal-bg);color:var(--teal)}
+.stage.model.on{background:var(--amber)}
+.prog{height:6px;background:var(--tint);border-radius:99px;overflow:hidden;flex:1;min-width:80px}
+.prog i{display:block;height:100%;background:var(--teal);width:0;transition:width .3s}
+
+/* timeline */
+.timeline{max-height:300px;overflow:auto;margin:0;padding:0;list-style:none}
+.timeline li{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);align-items:flex-start;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(4px)}}
+.timeline li:last-child{border:0}
+.timeline .who{flex:none;min-width:64px;text-align:center;font-size:11px;font-weight:800;letter-spacing:.4px;border-radius:6px;padding:2px 6px;margin-top:1px}
+.who.ai{background:var(--amber-bg);color:var(--amber)}
+.who.browser{background:var(--blue-bg);color:var(--blue)}
+.who.replay{background:var(--teal-bg);color:var(--teal)}
+.who.human{background:var(--red-bg);color:var(--red)}
+.who.sys{background:var(--tint);color:var(--muted)}
+.timeline .txt{flex:1}
+.timeline .ts{color:var(--muted);font-size:11px;flex:none;margin-top:2px}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--tint);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:24px;line-height:1.1}
+.stat span{font-size:11px;color:var(--muted);font-weight:600}
+.stat.zero b{color:var(--teal)}
+.stat.hot b{color:var(--amber)}
+
+/* result */
+.result{border-radius:12px;padding:14px 16px}
+.result .big{font-size:20px;font-weight:800;margin-bottom:2px}
+.result.success{background:var(--green-bg);color:#14532d}
+.result.business_outcome{background:var(--blue-bg);color:#1e3a8a}
+.result.escalated{background:var(--amber-bg);color:#7c2d12}
+.result.failed{background:var(--red-bg);color:#7f1d1d}
+.result.neutral{background:var(--tint);color:var(--ink)}
+.result p{margin:4px 0 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin-top:10px;font-size:13px}
+.kv dt{opacity:.75}.kv dd{margin:0;font-weight:700;word-break:break-word}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--line)}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.mono{font-family:Consolas,"Cascadia Mono",monospace;font-size:12px}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* log */
+.logwrap{margin-top:16px}
+.logwrap summary{cursor:pointer;font-weight:700;color:var(--muted);font-size:13px}
+.log{background:#101418;color:#c9d1d9;border-radius:10px;padding:10px 12px;margin-top:8px;max-height:240px;overflow:auto;font:12px/1.55 Consolas,"Cascadia Mono",monospace;white-space:pre-wrap}
+.log .warn{color:#f0b429}.log .error{color:#ff7b72}
+
+/* artifacts view */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:1100px){.cmp{grid-template-columns:1fr}}
+.art-head h2{margin:6px 0 2px;font-size:20px}
+.art-head p{margin:0;color:var(--muted)}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:12px 0;font-size:13px}
+.meta dt{color:var(--muted)}.meta dd{margin:0;font-weight:600;word-break:break-word}
+.verdict{border-radius:10px;padding:10px 12px;font-size:13px;margin:10px 0}
+.verdict.warn{background:var(--amber-bg);color:#7c2d12}
+.verdict.good{background:var(--green-bg);color:#14532d}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px}
+.step .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.step .top b{font-size:13px}
+.step .intent{color:var(--muted);font-size:12.5px;margin:2px 0 6px}
+.cand{display:grid;grid-template-columns:20px 120px 1fr;gap:8px;align-items:center;padding:4px 0;font-size:12.5px}
+.cand .i{width:20px;height:20px;border-radius:50%;background:var(--tint);text-align:center;font-weight:800;font-size:11px;line-height:20px}
+.cand:first-of-type .i{background:var(--teal);color:#fff}
+.bar{height:6px;background:var(--tint);border-radius:99px;overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;background:var(--teal)}
+.why{color:var(--muted);font-size:12px}
+.picker{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.picker select{width:auto;min-width:300px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">UI<span>Flow</span></div>
+  <div class="tag">Record once. Replay forever.</div>
+  <nav>
+    <button id="nav-run" class="on">Run</button>
+    <button id="nav-art">Capabilities</button>
+  </nav>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="reset" title="Clear the last run and start from a blank screen">Clear</button>
+  <span class="chip" id="chip-model">model: …</span>
+  <span class="chip" id="chip-status"><span class="dot"></span><span>Idle</span></span>
+</header>
+
+<main>
+<!-- ===================== RUN ===================== -->
+<section id="view-run" class="run-grid">
+  <div class="col-left">
+    <div class="card">
+      <div class="seg" id="seg">
+        <button data-mode="discover" class="on">1 · Discover</button>
+        <button data-mode="replay">2 · Replay</button>
+      </div>
+
+      <div id="form-discover">
+        <label for="goal">What should it do? (plain English)</label>
+        <textarea id="goal">Log in as the operator, then read the current balance for account 12345 from the accounts overview</textarea>
+        <label for="d-acct">Account to generalise into a parameter</label>
+        <input type="text" id="d-acct" value="12345">
+        <div class="hint">Becomes <span class="mono">account_id</span>, so the saved capability works for any account.</div>
+        <label for="d-id">Save the capability as</label>
+        <input type="text" id="d-id" value="">
+        <div class="hint">Uses the model, so it is slow and costs tokens. It happens once per flow.</div>
+      </div>
+
+      <div id="form-replay" style="display:none">
+        <label for="r-art">Capability</label>
+        <select id="r-art"></select>
+        <div id="r-badges" class="quick" style="margin-top:8px"></div>
+        <div id="r-params"></div>
+        <label class="toggle" style="margin-top:14px"><input type="checkbox" id="r-handoff">
+          <span>Let a human take over if it gets stuck<small>Pauses the run instead of ending it, and opens the operator console here.</small></span></label>
+        <div class="hint" style="margin-top:8px">No model is used while replaying.</div>
+      </div>
+
+      <label class="toggle"><input type="checkbox" id="show-window">
+        <span>Also show the real browser window<small>Off by default so the browser is seen once, in the page.</small></span></label>
+
+      <button class="btn" id="go">Start discovery</button>
+      <button class="btn stop" id="stop" style="display:none">Stop</button>
+      <div class="hint" id="form-err" style="color:var(--red);font-weight:600"></div>
+    </div>
+
+    <div class="card">
+      <h3>This run</h3>
+      <div class="stats">
+        <div class="stat" id="st-calls"><b>0</b><span>MODEL CALLS</span></div>
+        <div class="stat" id="st-tokens"><b>0</b><span>TOKENS</span></div>
+        <div class="stat" id="st-time"><b>0s</b><span>ELAPSED</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-mid">
+    <div class="screen">
+      <div class="screen-bar">
+        <div class="lights"><i></i><i></i><i></i></div>
+        <div class="title" id="screen-title">Browser</div>
+        <button class="btn ghost" id="toggle-view" style="display:none">Live view</button>
+      </div>
+      <div class="banner" id="banner"></div>
+      <div class="view" id="view">
+        <div class="placeholder" id="placeholder"><b>The browser appears here</b>Pick Discover or Replay and press start. You will watch the same browser the run is driving.</div>
+        <img id="frame" alt="Live browser view" style="display:none">
+        <iframe id="console-frame" title="Operator console" style="display:none"></iframe>
+      </div>
+      <div class="stages" id="stages"></div>
+    </div>
+
+    <div class="card">
+      <h3>What is happening</h3>
+      <ul class="timeline" id="timeline"><li class="empty">Nothing yet.</li></ul>
+    </div>
+  </div>
+
+  <div class="col-right">
+    <div class="card">
+      <h3>Result</h3>
+      <div id="result"><div class="result neutral"><div class="big">Waiting for a run</div><p>The outcome of each run shows up here.</p></div></div>
+    </div>
+    <div class="card" id="card-res" style="display:none">
+      <h3>How each step found its element</h3>
+      <div id="resolutions"></div>
+    </div>
+    <div class="card" id="card-new" style="display:none">
+      <h3>Capability it created</h3>
+      <div id="newcap"></div>
+    </div>
+    <div class="card" id="card-human" style="display:none">
+      <h3>What the human did</h3>
+      <div id="human"></div>
+    </div>
+  </div>
+</section>
+
+<details class="logwrap" id="logwrap">
+  <summary>Raw log (redacted)</summary>
+  <div class="log" id="log"></div>
+</details>
+
+<!-- ===================== CAPABILITIES ===================== -->
+<section id="view-art" style="display:none">
+  <div class="picker">
+    <select id="pick-a"></select>
+    <span class="tag">compared with</span>
+    <select id="pick-b"></select>
+  </div>
+  <div class="cmp"><div id="art-a"></div><div id="art-b"></div></div>
+</section>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+const S = {
+  mode: "discover",
+  artifacts: [],
+  running: false,
+  startedAt: 0,
+  endedAt: 0,
+  calls: 0, tokIn: 0, tokOut: 0,
+  stage: "", stageSince: 0,
+  totalSteps: 0, doneSteps: 0,
+  handoffUrl: "", showConsole: false,
+  lastEventN: -1,
+  runMode: "",
+  errLines: [],
+  handoffReason: "", handoffStep: "",
+};
+
+/* ---------- nav ---------- */
+function setTab(t) {
+  $("view-run").style.display = t === "run" ? "" : "none";
+  $("logwrap").style.display = t === "run" ? "" : "none";
+  $("view-art").style.display = t === "art" ? "" : "none";
+  $("nav-run").classList.toggle("on", t === "run");
+  $("nav-art").classList.toggle("on", t === "art");
+  if (t === "art") renderCompare();
+}
+$("nav-run").onclick = () => setTab("run");
+$("nav-art").onclick = () => setTab("art");
+
+/* ---------- forms ---------- */
+function setMode(m) {
+  S.mode = m;
+  document.querySelectorAll("#seg button").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
+  $("form-discover").style.display = m === "discover" ? "" : "none";
+  $("form-replay").style.display = m === "replay" ? "" : "none";
+  $("go").textContent = m === "discover" ? "Start discovery" : "Replay it";
+  $("form-err").textContent = "";
+}
+document.querySelectorAll("#seg button").forEach((b) => (b.onclick = () => setMode(b.dataset.mode)));
+
+function suggestId() {
+  const stamp = new Date().toISOString().slice(5, 16).replace(/[-:T]/g, "");
+  $("d-id").value = "demo_capability_" + stamp;
+}
+
+function selectedArtifact() {
+  return S.artifacts.find((a) => a.path === $("r-art").value);
+}
+
+function renderReplayForm() {
+  const a = selectedArtifact();
+  if (!a) { $("r-params").innerHTML = ""; $("r-badges").innerHTML = ""; return; }
+  $("r-badges").innerHTML =
+    `<span class="chip ${a.source === "hand-written" ? "green" : "amber"}">${a.source}</span>` +
+    `<span class="chip ${a.outcomes.length ? "green" : "amber"}">${a.outcomes.length ? a.outcomes.length + " declared outcomes" : "no declared outcomes"}</span>` +
+    `<span class="chip">${a.stepCount} steps</span>`;
+  $("r-params").innerHTML = a.inputs.map((i) => `
+    <label for="p-${esc(i.name)}">${esc(i.name)}${i.required ? " *" : ""}</label>
+    <input type="text" id="p-${esc(i.name)}" data-param="${esc(i.name)}" value="${esc(i.example || (i.name === "account_id" ? "12345" : ""))}">
+    ${i.name === "account_id" || i.name === "funding_account_id" ? `<div class="quick">
+      <button type="button" data-fill="p-${esc(i.name)}" data-v="12345">12345 · exists</button>
+      <button type="button" data-fill="p-${esc(i.name)}" data-v="12346">12346 · not in the data</button></div>` : ""}`).join("");
+  document.querySelectorAll("[data-fill]").forEach((b) => (b.onclick = () => ($(b.dataset.fill).value = b.dataset.v)));
+}
+$("r-art").onchange = renderReplayForm;
+
+function artLabel(a) { return `${a.name}  ·  ${a.path}`; }
+function fillArtifactSelects(preferPath) {
+  const opts = S.artifacts.map((a) => `<option value="${esc(a.path)}">${esc(artLabel(a))}</option>`).join("");
+  const keep = preferPath || $("r-art").value;
+  $("r-art").innerHTML = opts;
+  if (keep && S.artifacts.some((a) => a.path === keep)) $("r-art").value = keep;
+  renderReplayForm();
+  for (const id of ["pick-a", "pick-b"]) { const k = $(id).value; $(id).innerHTML = opts; if (k) $(id).value = k; }
+}
+
+async function loadArtifacts(prefer) {
+  S.artifacts = await (await fetch("/api/artifacts")).json();
+  fillArtifactSelects(prefer);
+  const draft = S.artifacts.find((a) => a.source === "discovered");
+  const ref = S.artifacts.find((a) => a.source === "hand-written");
+  if (!$("pick-a").dataset.set && draft && ref) { $("pick-a").value = draft.path; $("pick-b").value = ref.path; $("pick-a").dataset.set = 1; }
+  if (!$("pick-a").dataset.set && S.artifacts[0]) { $("pick-a").value = S.artifacts[0].path; $("pick-b").value = (S.artifacts[1] || S.artifacts[0]).path; }
+}
+
+/* ---------- starting / stopping ---------- */
+$("go").onclick = async () => {
+  $("form-err").textContent = "";
+  const body = { mode: S.mode, showWindow: $("show-window").checked };
+  if (S.mode === "discover") {
+    body.goal = $("goal").value.trim();
+    body.capabilityId = $("d-id").value.trim();
+    body.params = { account_id: $("d-acct").value.trim() };
+  } else {
+    const a = selectedArtifact();
+    if (!a) { $("form-err").textContent = "No capability to replay yet."; return; }
+    body.artifact = a.path;
+    body.handoff = $("r-handoff").checked;
+    body.params = {};
+    document.querySelectorAll("[data-param]").forEach((i) => (body.params[i.dataset.param] = i.value.trim()));
+  }
+  const r = await fetch("/api/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!r.ok) $("form-err").textContent = j.error || "could not start";
+};
+$("stop").onclick = () => fetch("/api/stop", { method: "POST" });
+
+/* ---------- resetting the run view ---------- */
+function resetRunView() {
+  S.running = true; S.calls = 0; S.tokIn = 0; S.tokOut = 0; S.stage = ""; S.totalSteps = 0; S.doneSteps = 0;
+  S.handoffUrl = ""; S.showConsole = false; S.endedAt = 0; S.errLines = []; S.handoffReason = ""; S.handoffStep = "";
+  $("timeline").innerHTML = ""; $("log").innerHTML = "";
+  $("result").innerHTML = `<div class="result neutral"><div class="big">Running…</div><p>The outcome appears when the run ends.</p></div>`;
+  for (const id of ["card-res", "card-new", "card-human"]) $(id).style.display = "none";
+  $("frame").style.display = "none"; $("console-frame").style.display = "none"; $("console-frame").src = "about:blank";
+  $("placeholder").style.display = ""; $("placeholder").innerHTML = "<b>Starting the browser…</b>";
+  $("banner").className = "banner"; $("toggle-view").style.display = "none";
+  renderStages(); updateStats();
+}
+
+/* ---------- clearing back to a blank screen ---------- */
+function resetToBlank() {
+  Object.assign(S, { running: false, runMode: "", startedAt: 0, endedAt: 0, calls: 0, tokIn: 0, tokOut: 0,
+    stage: "", totalSteps: 0, doneSteps: 0, handoffUrl: "", showConsole: false, lastEventN: -1,
+    errLines: [], handoffReason: "", handoffStep: "" });
+  $("timeline").innerHTML = `<li class="empty">Nothing yet.</li>`;
+  $("log").innerHTML = "";
+  $("result").innerHTML = `<div class="result neutral"><div class="big">Waiting for a run</div><p>The outcome of each run shows up here.</p></div>`;
+  for (const id of ["card-res", "card-new", "card-human"]) $(id).style.display = "none";
+  const img = $("frame"); img.removeAttribute("src"); delete img.dataset.has; img.style.display = "none";
+  $("console-frame").src = "about:blank"; $("console-frame").style.display = "none";
+  $("placeholder").style.display = "";
+  $("placeholder").innerHTML = "<b>The browser appears here</b>Pick Discover or Replay and press start. You will watch the same browser the run is driving.";
+  $("screen-title").textContent = "Browser";
+  $("banner").className = "banner"; $("toggle-view").style.display = "none";
+  $("go").style.display = ""; $("stop").style.display = "none"; $("form-err").textContent = "";
+  setStatus("Idle", "", false); renderStages(); updateStats(); suggestId();
+}
+$("reset").onclick = async () => {
+  const r = await fetch("/api/reset", { method: "POST" });
+  if (r.ok) resetToBlank(); else $("form-err").textContent = (await r.json()).error || "could not clear";
+};
+
+/* ---------- stages strip ---------- */
+const DISCOVER_STAGES = ["observe", "decide", "act", "compile"];
+function renderStages() {
+  if (S.runMode === "replay") {
+    const pct = S.totalSteps ? Math.round((S.doneSteps / S.totalSteps) * 100) : 0;
+    $("stages").innerHTML = `<span class="stage ${S.running ? "on" : "done"}">replay</span><div class="prog"><i style="width:${pct}%"></i></div><span class="tag">${S.doneSteps}/${S.totalSteps || "?"} steps</span><span class="stage">no model</span>`;
+  } else if (S.runMode === "discover") {
+    $("stages").innerHTML = DISCOVER_STAGES.map((s) =>
+      `<span class="stage ${s === "decide" ? "model " : ""}${S.stage === s ? "on" : ""}">${s === "decide" ? "decide · model" : s}</span>`).join("") +
+      `<span class="tag" id="wait-note"></span>`;
+  } else {
+    $("stages").innerHTML = "";
+  }
+}
+
+function setStatus(text, kind, pulse) {
+  $("chip-status").className = "chip " + (kind || "");
+  $("chip-status").innerHTML = `<span class="dot ${pulse ? "pulse" : ""}"></span><span>${esc(text)}</span>`;
+}
+
+function fmtDur(ms) {
+  const s = Math.floor(ms / 1000);
+  return s < 60 ? s + "s" : Math.floor(s / 60) + "m " + String(s % 60).padStart(2, "0") + "s";
+}
+function updateStats() {
+  $("st-calls").innerHTML = `<b>${S.calls}</b><span>MODEL CALLS</span>`;
+  $("st-calls").className = "stat " + (S.runMode === "replay" && S.calls === 0 ? "zero" : S.calls ? "hot" : "");
+  $("st-tokens").innerHTML = `<b>${(S.tokIn + S.tokOut).toLocaleString()}</b><span>TOKENS</span>`;
+  $("st-tokens").className = "stat " + (S.runMode === "replay" && S.calls === 0 ? "zero" : "");
+  const end = S.endedAt || Date.now();
+  $("st-time").innerHTML = `<b>${S.startedAt ? fmtDur(end - S.startedAt) : "0s"}</b><span>ELAPSED</span>`;
+}
+
+/* ---------- timeline ---------- */
+function addTL(who, cls, text, t) {
+  const ul = $("timeline");
+  const empty = ul.querySelector(".empty"); if (empty) empty.remove();
+  const li = document.createElement("li");
+  const rel = S.startedAt ? fmtDur(t - S.startedAt) : "";
+  li.innerHTML = `<span class="who ${cls}">${who}</span><span class="txt">${esc(text)}</span><span class="ts">${rel}</span>`;
+  ul.appendChild(li);
+  ul.scrollTop = ul.scrollHeight;
+}
+
+function onLog(ev) {
+  const { level, msg, t } = ev;
+  const d = document.createElement("div");
+  d.className = level; d.textContent = msg;
+  $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight;
+  if (level === "error" || /^(Error|TypeError|\w*Error:)/.test(msg)) S.errLines.push(msg);
+
+  let m;
+  if ((m = /^--- stage: (\w+) ---/.exec(msg))) { S.stage = m[1]; S.stageSince = t; renderStages(); return; }
+  if ((m = /^\[decide\] (act|done|stuck): (.*)/.exec(msg))) {
+    const verb = { act: "Decided", done: "Goal reached", stuck: "Stuck" }[m[1]];
+    addTL("AI", "ai", `${verb}: ${m[2]}`, t); return;
+  }
+  if ((m = /^\[decide\] (\d+) req \| in (\d+) \| out (\d+)/.exec(msg))) {
+    S.calls += 1; S.tokIn += +m[2]; S.tokOut += +m[3]; updateStats(); return;
+  }
+  if ((m = /^\[act\] step (\d+): (.*)/.exec(msg))) { addTL("BROWSER", "browser", m[2], t); return; }
+  if ((m = /^\[act\] read "([^"]+)"/.exec(msg))) { addTL("BROWSER", "browser", `Read "${m[1]}" from the page`, t); return; }
+  if ((m = /^\[replay\] (\S+)@(\S+) \| (\d+) steps/.exec(msg))) { S.totalSteps = +m[3]; renderStages(); addTL("REPLAY", "replay", `Loaded ${m[1]} (${m[3]} steps). No model involved.`, t); return; }
+  if ((m = /^\[replay\] (\w+): ok$/.exec(msg))) { S.doneSteps += 1; renderStages(); addTL("REPLAY", "replay", `${m[1]} ✓`, t); return; }
+  if ((m = /^\[replay\] business outcome: (\S+)/.exec(msg))) { addTL("REPLAY", "replay", `Business outcome: ${m[1]}`, t); return; }
+  if ((m = /^\[replay\] escalating: (.*)/.exec(msg))) { addTL("REPLAY", "human", `Escalating: ${m[1]}`, t); return; }
+  if (/^\[surface\] control ceded to human/.test(msg)) { addTL("HUMAN", "human", "Control handed to a person. Automation is locked out.", t); return; }
+  if (/^\[surface\] automation resumed/.test(msg)) { addTL("REPLAY", "replay", "Control returned to automation", t); return; }
+  if ((m = /^\[operator\] intervention \S+ raised\W+(\w+) at (\S+)/.exec(msg))) { S.handoffReason = m[1]; S.handoffStep = m[2]; return; }
+  if ((m = /^\[operator\] (\S+) claimed/.exec(msg))) { addTL("HUMAN", "human", `${m[1]} took the session`, t); return; }
+  if ((m = /^\[compile\] wrote /.exec(msg))) { addTL("COMPILER", "sys", "Compiled the run into a capability file", t); return; }
+  if (/^\[headroom\] compression dropped/.test(msg)) return;
+  if (level === "error") addTL("ERROR", "human", msg, t);
+}
+
+/* ---------- handoff ---------- */
+function showHandoff(url, t) {
+  S.handoffUrl = url; S.showConsole = true;
+  $("console-frame").src = url;
+  applyViewMode();
+  $("banner").className = "banner show human";
+  // An approval and a repair need opposite instructions. On an approval the
+  // person must NOT perform the step themselves: the automation does it once
+  // they hand back, and doing it by hand too would happen twice.
+  $("banner").textContent = S.handoffReason === "irreversible_step"
+    ? "Approval needed: the next step cannot be undone. Review the page below, then press “Approve & resume” to let the automation do it. Do not click the button on the page yourself."
+    : "Paused: a person is needed. Use the operator console below. Click the page, type, then press “Hand back & resume”.";
+  $("toggle-view").style.display = "";
+  addTL("HUMAN", "human", "Run suspended and waiting for an operator. The browser is still open.", t);
+  setStatus("Waiting for a human", "red", true);
+}
+function endHandoff() {
+  S.showConsole = false; applyViewMode();
+  $("banner").className = "banner";
+  $("toggle-view").style.display = "none";
+  setStatus("Running", "teal", true);
+}
+function applyViewMode() {
+  const con = S.showConsole && S.handoffUrl;
+  $("console-frame").style.display = con ? "" : "none";
+  $("frame").style.display = !con && $("frame").dataset.has ? "" : "none";
+  $("placeholder").style.display = !con && !$("frame").dataset.has ? "" : "none";
+  $("toggle-view").textContent = con ? "Live view" : "Operator console";
+}
+$("toggle-view").onclick = () => { S.showConsole = !S.showConsole; applyViewMode(); };
+
+/* ---------- ending ---------- */
+function onEnd(ev) {
+  S.running = false; S.endedAt = ev.t; updateStats(); renderStages();
+  $("go").style.display = ""; $("stop").style.display = "none";
+  $("banner").className = "banner"; $("toggle-view").style.display = "none";
+  S.showConsole = false; applyViewMode();
+  S.stage = ""; renderStages();
+
+  if (ev.stopped) { setStatus("Stopped", "", false); $("result").innerHTML = `<div class="result neutral"><div class="big">Stopped</div><p>You stopped this run.</p></div>`; return; }
+
+  if (S.runMode === "replay") {
+    const r = ev.result;
+    if (!r) {
+      setStatus("Failed", "red");
+      const why = S.errLines.slice(-2).map((l) => `<p class="mono">${esc(l)}</p>`).join("");
+      $("result").innerHTML = `<div class="result failed"><div class="big">The run did not finish</div>${why || "<p>It ended without a result.</p>"}<p class="note" style="color:inherit;opacity:.8">The raw log below has the full output.</p></div>`;
+      return;
+    }
+    renderResult(r);
+  } else {
+    if (ev.artifactPath) {
+      setStatus("Capability created", "green");
+      $("result").innerHTML = `<div class="result success"><div class="big">Capability created</div><p>The model learned the task. From now on it can be replayed with no model.</p></div>`;
+      showNewCap(ev.artifactPath);
+      loadArtifacts(ev.artifactPath);
+    } else {
+      setStatus("Discovery did not finish", "amber");
+      $("result").innerHTML = `<div class="result escalated"><div class="big">No capability produced</div><p>The model stopped or gave up before the goal was met. See the timeline and log.</p></div>`;
+    }
+  }
+}
+
+function renderResult(r) {
+  const outs = (o) => Object.entries(o || {}).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  let html = "";
+  if (r.status === "success") {
+    setStatus("Success", "green");
+    html = `<div class="result success"><div class="big">Success</div><p>Finished with no model in the loop.</p><dl class="kv">${outs(r.outputs)}</dl></div>`;
+  } else if (r.status === "business_outcome") {
+    setStatus("Business outcome", "blue");
+    html = `<div class="result business_outcome"><div class="big">${esc(r.outcome)}</div><p>${esc(r.message)}</p>
+      <p class="note" style="color:inherit;opacity:.8">A declared, legitimate answer. Not a crash, and nobody gets paged.</p></div>`;
+  } else if (r.status === "escalated") {
+    setStatus("Escalated", "amber");
+    html = `<div class="result escalated"><div class="big">Escalated</div>
+      <p>It could not continue at step <b>${esc(r.atStepId)}</b> (${esc(String(r.reason).replace(/_/g, " "))}), and this capability does not declare what that means.</p>
+      <p class="note" style="color:inherit;opacity:.85">Run again with “let a human take over” to see the handoff.</p></div>`;
+  } else {
+    setStatus("Failed", "red");
+    const e = r.error || {};
+    const byHand = (r.humanActions || []).length && /not visible|detached|not attached/i.test(String(e.observed));
+    html = `<div class="result failed"><div class="big">Failed · ${esc(e.code)}</div><dl class="kv"><dt>Expected</dt><dd>${esc(e.expected)}</dd><dt>Observed</dt><dd>${esc(String(e.observed).split("\n")[0].slice(0, 160))}</dd>${e.atStepId ? `<dt>At step</dt><dd>${esc(e.atStepId)}</dd>` : ""}</dl>
+      ${byHand ? `<p class="note" style="color:inherit;opacity:.9"><b>Likely cause:</b> the person already did this step by hand, so the button the automation wanted is gone. On an approval, press “Approve &amp; resume” and let the automation do it.</p>` : ""}</div>`;
+  }
+  $("result").innerHTML = html;
+
+  if (r.resolutions && r.resolutions.length) {
+    $("card-res").style.display = "";
+    $("resolutions").innerHTML = `<table><tr><th>Step</th><th>Strategy</th><th>Candidate</th><th>Match</th><th>ms</th></tr>` +
+      r.resolutions.map((x) => `<tr><td class="mono">${esc(x.stepId)}</td><td>${esc(x.strategy)}</td>
+        <td><span class="chip ${x.resolvedByCandidate === 0 ? "green" : "amber"}">#${x.resolvedByCandidate + 1}</span></td>
+        <td>${x.matchCount}</td><td>${x.elapsedMs}</td></tr>`).join("") + `</table>
+      <div class="note">Each step carries a ranked list of ways to find its element. Candidate #1 is the best. If a step starts winning with #2 or #3 across runs, the app is drifting, and you find out before it becomes an outage.</div>`;
+  }
+  if (r.humanActions && r.humanActions.length) {
+    $("card-human").style.display = "";
+    $("human").innerHTML = `<table><tr><th>Who</th><th>Did</th><th>Value</th></tr>` +
+      r.humanActions.map((a) => `<tr><td>${esc(a.operator)}</td><td>${esc(a.kind)}</td><td class="mono">${esc(a.value || "")}</td></tr>`).join("") +
+      `</table><div class="note">Recorded and returned with the result. Typed values are redacted.</div>`;
+  }
+}
+
+async function showNewCap(path) {
+  try {
+    const a = await (await fetch("/api/artifact?path=" + encodeURIComponent(path))).json();
+    const sum = S.artifacts.find((x) => x.path === path);
+    $("card-new").style.display = "";
+    $("newcap").innerHTML = `<b>${esc(a.name)}</b><div class="tag" style="margin:2px 0 8px">${esc(path)}</div>
+      <div class="quick" style="margin:0 0 10px"><span class="chip amber">${esc(a.provenance?.review?.status || "draft")}</span>
+      <span class="chip">${a.flow.steps.length} steps</span>
+      <span class="chip ${(a.contract.outcomes || []).length ? "green" : "amber"}">${(a.contract.outcomes || []).length} declared outcomes</span></div>
+      ${a.flow.steps.map((s) => { const c = candidatesOf(s)[0]; return `<div class="tag">• ${esc(s.intent || s.id)}${c ? ` <span class="chip" style="margin-left:4px">${esc(c.candidate.using)}</span>` : ""}</div>`; }).join("")}
+      <div class="note">It is a draft: discovery only sees the happy path, so a person adds the business outcomes during review.</div>
+      <button class="btn" id="use-new" style="margin-top:12px">Replay this capability</button>`;
+    $("use-new").onclick = async () => {
+      await loadArtifacts(path); setMode("replay"); $("r-art").value = path; renderReplayForm(); window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+  } catch { /* the artifact list still has it */ }
+}
+
+/* ---------- event stream ---------- */
+function onEvent(ev) {
+  if (ev.n <= S.lastEventN && ev.kind !== "start") return;
+  S.lastEventN = ev.n;
+  switch (ev.kind) {
+    case "start":
+      S.lastEventN = ev.n; S.runMode = ev.mode; S.startedAt = ev.t; resetRunView();
+      $("go").style.display = "none"; $("stop").style.display = "";
+      $("screen-title").textContent = ev.mode === "discover" ? "Discovery: the model is driving" : "Replay: no model";
+      setStatus(ev.mode === "discover" ? "Discovering" : "Replaying", "teal", true);
+      startFrames();
+      addTL("SYSTEM", "sys", ev.mode === "discover" ? "Started discovery: " + ev.label : "Started replay of " + ev.label, ev.t);
+      break;
+    case "log": onLog(ev); break;
+    case "handoff": showHandoff(ev.url, ev.t); break;
+    case "handoff_end": endHandoff(); break;
+    case "reset": resetToBlank(); break;
+    case "end": onEnd(ev); break;
+  }
+}
+
+function connect() {
+  const es = new EventSource("/api/events");
+  es.onmessage = (m) => onEvent(JSON.parse(m.data));
+  es.onerror = () => { /* the browser reconnects and the server replays the run */ };
+}
+
+/* ---------- live frames ---------- */
+let framesOn = false;
+async function startFrames() {
+  if (framesOn) return;
+  framesOn = true;
+  let lastUrl = null;
+  while (S.runMode && (S.running || !S.endedAt || Date.now() - S.endedAt < 1500)) {
+    try {
+      const r = await fetch("/api/frame?t=" + Date.now(), { cache: "no-store" });
+      if (r.status === 200) {
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const img = $("frame");
+        img.src = url; img.dataset.has = 1;
+        if (lastUrl) URL.revokeObjectURL(lastUrl);
+        lastUrl = url;
+        if (!(S.showConsole && S.handoffUrl)) { img.style.display = ""; $("placeholder").style.display = "none"; }
+      }
+    } catch { /* server restarting */ }
+    await new Promise((r) => setTimeout(r, 450));
+    if (!S.running && S.endedAt && Date.now() - S.endedAt >= 1500) break;
+  }
+  framesOn = false;
+}
+
+/* ---------- ticking: elapsed + "waiting for the model" ---------- */
+setInterval(() => {
+  if (S.running) {
+    updateStats();
+    const n = $("wait-note");
+    if (n && S.stage === "decide") {
+      const s = Math.floor((Date.now() - S.stageSince) / 1000);
+      n.textContent = s >= 3 ? `waiting for the model… ${s}s` : "";
+    } else if (n) n.textContent = "";
+  }
+}, 500);
+
+/* ---------- capabilities view ---------- */
+function candidatesOf(step) {
+  const act = step.action || {};
+  const t = Object.values(act).find((v) => v && typeof v === "object" && Array.isArray(v.candidates));
+  return t ? t.candidates : [];
+}
+function valueText(v) {
+  if (!v || typeof v !== "object") return "";
+  if (v.from === "secret") return "secret reference: " + v.secret;
+  if (v.from === "param") return "parameter: " + (v.param || v.name);
+  if (v.from === "literal") return JSON.stringify(v.value);
+  return "";
+}
+
+function renderArtifactCol(a, sum, other) {
+  const outcomes = a.contract.outcomes || [];
+  const verdict = outcomes.length
+    ? `<div class="verdict good"><b>Declares ${outcomes.length} business outcome${outcomes.length > 1 ? "s" : ""}:</b> ${outcomes.map((o) => `<span class="mono">${esc(o.code)}</span>`).join(", ")}. A known situation becomes a clean answer.</div>`
+    : `<div class="verdict warn"><b>Declares no business outcomes.</b> Any situation it was not shown ends as an escalation to a person.</div>`;
+  const steps = a.flow.steps.map((s) => {
+    const cands = candidatesOf(s);
+    const val = valueText(s.action && s.action.value);
+    return `<div class="step"><div class="top"><b>${esc(s.id)}</b><span class="chip">${esc(s.action && s.action.do)}</span>
+        <span class="chip ${s.risk === "irreversible" ? "red" : ""}">${esc(s.risk || "")}</span></div>
+      <div class="intent">${esc(s.intent || "")}${val ? " · " + esc(val) : ""}</div>
+      ${cands.map((c, i) => `<div class="cand"><span class="i">${i + 1}</span><div><b>${esc(c.candidate.using)}</b><div class="bar"><i style="width:${Math.round((c.confidence || 0) * 100)}%"></i></div></div>
+        <div class="why">${Math.round((c.confidence || 0) * 100)}% · ${esc(c.rationale || "")}</div></div>`).join("") || `<div class="why">No locator: ${esc(s.action && s.action.do)} step.</div>`}</div>`;
+  }).join("");
+  return `<div class="card art-head"><span class="chip ${sum && sum.source === "hand-written" ? "green" : "amber"}">${sum ? sum.source : ""}</span>
+    <h2>${esc(a.name)}</h2><p>${esc(a.description || "")}</p>
+    <dl class="meta">
+      <dt>Id</dt><dd class="mono">${esc(a.id)} @ ${esc(a.version)}</dd>
+      <dt>Written by</dt><dd>${esc(a.provenance && a.provenance.model || "unknown")}</dd>
+      <dt>Recorded</dt><dd>${esc(a.provenance && a.provenance.recordedAt ? new Date(a.provenance.recordedAt).toLocaleString() : "")}</dd>
+      <dt>Review status</dt><dd>${esc(a.provenance && a.provenance.review && a.provenance.review.status)}</dd>
+      <dt>Inputs</dt><dd>${(a.contract.inputs || []).map((i) => esc(i.name)).join(", ") || "none"}</dd>
+      <dt>Outputs</dt><dd>${(a.contract.outputs || []).map((i) => esc(i.name)).join(", ") || "none"}</dd>
+      <dt>Integrity hash</dt><dd class="mono">${esc(((a.integrity && a.integrity.contentSha256) || "").slice(0, 16))}…</dd>
+    </dl>${verdict}
+    <h3 style="margin:14px 0 0">Steps and how each finds its element</h3>${steps}</div>`;
+}
+
+async function renderCompare() {
+  for (const [sel, box] of [["pick-a", "art-a"], ["pick-b", "art-b"]]) {
+    const path = $(sel).value;
+    if (!path) { $(box).innerHTML = ""; continue; }
+    try {
+      const a = await (await fetch("/api/artifact?path=" + encodeURIComponent(path))).json();
+      $(box).innerHTML = renderArtifactCol(a, S.artifacts.find((x) => x.path === path));
+    } catch { $(box).innerHTML = `<div class="card">Could not read ${esc(path)}</div>`; }
+  }
+}
+$("pick-a").onchange = renderCompare; $("pick-b").onchange = renderCompare;
+
+/* ---------- boot ---------- */
+(async function boot() {
+  suggestId();
+  try {
+    const info = await (await fetch("/api/info")).json();
+    $("chip-model").textContent = "model: " + info.model;
+  } catch { $("chip-model").textContent = "model: unknown"; }
+  await loadArtifacts();
+  connect();
+})();
+</script>
+</body>
+</html>

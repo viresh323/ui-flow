@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UIFlow: Record once, replay forever</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+<style>
+  html, body { margin: 0; height: 100%; background: #14181f; }
+  body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  /* 16:9 canvas designed at 1920x1080, scaled to fit the window */
+  #stage { width: 1920px; height: 1080px; transform-origin: center center; flex: none; }
+  .slide {
+    position: relative; box-sizing: border-box; width: 1920px; height: 1080px;
+    background: #FBFBF8; color: #1B2430; font-family: 'DM Sans', Arial, sans-serif;
+    padding: 128px 128px 160px; display: flex; flex-direction: column;
+    justify-content: space-between; gap: 48px;
+  }
+  .eyebrow { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #0F766E; }
+  h1 { margin: 0; font-size: 104px; font-weight: 700; line-height: 1.05; }
+  .sub { margin: 0; width: 1500px; font-size: 36px; line-height: 1.4; color: #4A5568; }
+  .head { display: flex; flex-direction: column; gap: 24px; }
+  .row { display: flex; align-items: center; gap: 32px; }
+  .card {
+    flex: 1; display: flex; flex-direction: column; gap: 12px; background: #fff;
+    padding: 40px; border: 1px solid #E3E6E4; border-radius: 16px;
+  }
+  .card .tag { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 2px; }
+  .card h3 { margin: 0; font-size: 44px; font-weight: 700; line-height: 1.2; }
+  .card p.body { margin: 0; font-size: 32px; line-height: 1.4; color: #4A5568; }
+  .amber { border-top: 8px solid #B45309; } .amber .tag { color: #B45309; }
+  .ink   { border-top: 8px solid #1B2430; } .ink .tag   { color: #1B2430; }
+  .teal  { border-top: 8px solid #0F766E; } .teal .tag  { color: #0F766E; }
+  .arrow { flex: none; width: 72px; height: 40px; background: #9AA3AE;
+           clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%); }
+  .foot { position: absolute; left: 128px; bottom: 64px; margin: 0; font-size: 24px; color: #6A7179; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <section class="slide">
+    <div class="head">
+      <p class="eyebrow">UIFLOW</p>
+      <h1>Record once. Replay forever.</h1>
+      <p class="sub">An LLM works out the task one time. What it learns becomes a file a person can review, and that file runs again and again with no model involved.</p>
+    </div>
+    <div class="row">
+      <div class="card amber">
+        <p class="tag">1 · DISCOVER</p>
+        <h3>LLM + browser</h3>
+        <p class="body">Costs dollars. Runs once per flow.</p>
+      </div>
+      <div class="arrow"></div>
+      <div class="card ink">
+        <p class="tag">2 · CAPABILITY</p>
+        <h3>A typed JSON file</h3>
+        <p class="body">Versioned and reviewed by a human.</p>
+      </div>
+      <div class="arrow"></div>
+      <div class="card teal">
+        <p class="tag">3 · REPLAY</p>
+        <h3>Browser only</h3>
+        <p class="body">No model. Fractions of a cent, thousands of runs.</p>
+      </div>
+    </div>
+    <p class="foot">Replay code never imports the model providers.</p>
+  </section>
+</div>
+<script>
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    document.getElementById('stage').style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>

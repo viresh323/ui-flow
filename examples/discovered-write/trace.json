@@ -1,0 +1,262 @@
+[
+  {
+    "stepIndex": 0,
+    "intent": "Enter the operator username to log in.",
+    "action": {
+      "do": "type",
+      "ref": "e34",
+      "value": {
+        "$secret": "tenant.parabank.operator_user"
+      },
+      "irreversible": false,
+      "harvested": {
+        "tagName": "input",
+        "role": "textbox",
+        "accessibleName": null,
+        "labelText": "Username",
+        "fieldName": "username",
+        "formName": "login",
+        "tablePosition": null,
+        "cssPath": "input[name=\"username\"]",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/index.htm",
+      "title": "ParaBank | Welcome | Online Banking"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:18:56.397Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 1,
+    "intent": "Enter the operator username to log in.",
+    "action": {
+      "do": "type",
+      "ref": "e34",
+      "value": {
+        "$secret": "tenant.parabank.operator_user"
+      },
+      "irreversible": false,
+      "harvested": {
+        "tagName": "input",
+        "role": "textbox",
+        "accessibleName": null,
+        "labelText": "Username",
+        "fieldName": "username",
+        "formName": "login",
+        "tablePosition": null,
+        "cssPath": "input[name=\"username\"]",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/index.htm",
+      "title": "ParaBank | Welcome | Online Banking"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:19:23.102Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 2,
+    "intent": "Enter the operator password to log in.",
+    "action": {
+      "do": "type",
+      "ref": "e37",
+      "value": {
+        "$secret": "tenant.parabank.operator_password"
+      },
+      "irreversible": false,
+      "harvested": {
+        "tagName": "input",
+        "role": "textbox",
+        "accessibleName": null,
+        "labelText": "Password",
+        "fieldName": "password",
+        "formName": "login",
+        "tablePosition": null,
+        "cssPath": "input[name=\"password\"]",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/index.htm",
+      "title": "ParaBank | Welcome | Online Banking"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:19:28.336Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 3,
+    "intent": "Click the Log In button to authenticate as the operator.",
+    "action": {
+      "do": "click",
+      "ref": "e39",
+      "irreversible": false,
+      "harvested": {
+        "tagName": "input",
+        "role": "button",
+        "accessibleName": "Log In",
+        "labelText": "Password",
+        "fieldName": null,
+        "formName": "login",
+        "tablePosition": null,
+        "cssPath": "form[name=\"login\"] > div:nth-of-type(3) > input",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/index.htm",
+      "title": "ParaBank | Welcome | Online Banking"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:19:33.978Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 4,
+    "intent": "Navigate to the 'Open New Account' page to begin the account opening process.",
+    "action": {
+      "do": "click",
+      "ref": "f1e33",
+      "irreversible": false,
+      "harvested": {
+        "tagName": "a",
+        "role": "link",
+        "accessibleName": "Open New Account",
+        "labelText": "Account Services",
+        "fieldName": null,
+        "formName": null,
+        "tablePosition": null,
+        "cssPath": "div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > ul > li:nth-of-type(1) > a",
+        "ownText": "Open New Account"
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/overview.htm",
+      "title": "ParaBank | Accounts Overview"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:19:51.420Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 5,
+    "intent": "Select 'SAVINGS' as the account type for the new account.",
+    "action": {
+      "do": "select",
+      "ref": "f2e54",
+      "value": "SAVINGS",
+      "irreversible": false,
+      "harvested": {
+        "tagName": "select",
+        "role": "combobox",
+        "accessibleName": null,
+        "labelText": "What type of Account would you like to open?",
+        "fieldName": null,
+        "formName": null,
+        "tablePosition": null,
+        "cssPath": "div:nth-of-type(3) > div:nth-of-type(2) > div > div:nth-of-type(1) > form > select:nth-of-type(1)",
+        "ownText": "CHECKING SAVINGS"
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/openaccount.htm",
+      "title": "ParaBank | Open Account"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:20:12.255Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 6,
+    "intent": "Click the 'Open New Account' button to create the new savings account funded from account 12345.",
+    "action": {
+      "do": "click",
+      "ref": "f2e58",
+      "irreversible": true,
+      "harvested": {
+        "tagName": "input",
+        "role": "button",
+        "accessibleName": "Open New Account",
+        "labelText": "54321",
+        "fieldName": null,
+        "formName": null,
+        "tablePosition": null,
+        "cssPath": "div:nth-of-type(2) > div > div:nth-of-type(1) > form > div > input",
+        "ownText": null
+      }
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/openaccount.htm",
+      "title": "ParaBank | Open Account"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:20:21.181Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  },
+  {
+    "stepIndex": 7,
+    "intent": "Read the new account number from the confirmation screen.",
+    "action": {
+      "do": "read",
+      "ref": "f2e87",
+      "into": "new_account_number",
+      "irreversible": false,
+      "harvested": {
+        "tagName": "a",
+        "role": "link",
+        "accessibleName": "13566",
+        "labelText": "Your new account number:",
+        "fieldName": null,
+        "formName": null,
+        "tablePosition": null,
+        "cssPath": "div:nth-of-type(3) > div:nth-of-type(2) > div > div:nth-of-type(2) > p:nth-of-type(2) > a",
+        "ownText": "13566"
+      },
+      "captured": "13566"
+    },
+    "observationBefore": {
+      "url": "http://localhost:8080/parabank/openaccount.htm",
+      "title": "ParaBank | Open Account"
+    },
+    "outcome": "ok",
+    "at": "2026-09-15T09:20:58.552Z",
+    "targeting": {
+      "strategy": "harvested",
+      "candidateIndex": 0,
+      "matchCount": 1
+    }
+  }
+]

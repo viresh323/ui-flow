@@ -1,0 +1,352 @@
+{
+  "kind": "capability",
+  "schemaVersion": "1.0.0",
+  "id": "read_account_balance_v2",
+  "version": "1.0.0",
+  "name": "Read account balance v2",
+  "description": "Log in as the operator, then read the current balance for account 12345 from the accounts overview",
+  "surface": "web",
+  "app": {
+    "product": "parabank",
+    "productVersionRange": "*",
+    "entryPoint": {
+      "path": "/parabank/index.htm",
+      "requiresSession": true
+    }
+  },
+  "contract": {
+    "inputs": [
+      {
+        "name": "account_id",
+        "description": "Supplied per invocation (observed as \"12345\" during discovery)",
+        "type": {
+          "kind": "string"
+        },
+        "required": true,
+        "sensitivity": "pii"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "account_12345_balance",
+        "description": "Read the current balance for account 12345 from the accounts overview table",
+        "type": {
+          "kind": "string"
+        },
+        "sensitivity": "pii",
+        "fromBinding": "account_12345_balance",
+        "transforms": [
+          {
+            "op": "trim"
+          }
+        ],
+        "required": true
+      }
+    ],
+    "outcomes": []
+  },
+  "flow": {
+    "steps": [
+      {
+        "id": "type_0",
+        "intent": "Type the operator username into the username field",
+        "action": {
+          "do": "type",
+          "target": {
+            "id": "type_0_target",
+            "describe": "textbox labelled \"Username\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Username",
+                  "controlRole": "textbox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              },
+              {
+                "candidate": {
+                  "using": "field_name",
+                  "name": "username",
+                  "formName": "login"
+                },
+                "confidence": 0.8,
+                "rationale": "Server-rendered form field name; stable across versions of the same vendor product."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "input[name=\"username\"]"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "secret",
+            "secret": "tenant.parabank.operator_user"
+          },
+          "sensitivity": "secret",
+          "clearFirst": true
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "type_1",
+        "intent": "Type the operator password into the password field",
+        "action": {
+          "do": "type",
+          "target": {
+            "id": "type_1_target",
+            "describe": "textbox labelled \"Password\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "Password",
+                  "controlRole": "textbox",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              },
+              {
+                "candidate": {
+                  "using": "field_name",
+                  "name": "password",
+                  "formName": "login"
+                },
+                "confidence": 0.8,
+                "rationale": "Server-rendered form field name; stable across versions of the same vendor product."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "input[name=\"password\"]"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "value": {
+            "from": "secret",
+            "secret": "tenant.parabank.operator_password"
+          },
+          "sensitivity": "secret",
+          "clearFirst": true
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "click_2",
+        "intent": "Click the Log In button to submit the login form.",
+        "action": {
+          "do": "click",
+          "target": {
+            "id": "click_2_target",
+            "describe": "button \"Log In\"",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "role_name",
+                  "role": "button",
+                  "name": "Log In",
+                  "exact": true
+                },
+                "confidence": 0.9,
+                "rationale": "Role plus accessible name; the most portable strategy and the one that ports to a desktop surface."
+              },
+              {
+                "candidate": {
+                  "using": "css",
+                  "selector": "form[name=\"login\"] > div:nth-of-type(3) > input"
+                },
+                "confidence": 0.45,
+                "rationale": "Structural fallback; encodes incidental layout, so ranked last."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          }
+        },
+        "risk": "reversible",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      },
+      {
+        "id": "read_3",
+        "intent": "Read the current balance for account 12345 from the accounts overview table",
+        "action": {
+          "do": "read",
+          "target": {
+            "id": "read_3_target",
+            "describe": "Balance* cell for the requested row",
+            "region": {
+              "framePath": []
+            },
+            "candidates": [
+              {
+                "candidate": {
+                  "using": "table_cell",
+                  "rowMatch": {
+                    "columnHeader": "Account",
+                    "equals": "${account_id}"
+                  },
+                  "columnHeader": "Balance*"
+                },
+                "confidence": 0.88,
+                "rationale": "Header-relative row/column intersection; independent of row order, paging and column count."
+              },
+              {
+                "candidate": {
+                  "using": "label_proximity",
+                  "labelText": "${account_id}",
+                  "controlRole": "cell",
+                  "direction": "after",
+                  "maxDistance": 3
+                },
+                "confidence": 0.85,
+                "rationale": "Control has no accessible name; the visible label is what a tenant rebrand is least likely to change."
+              }
+            ],
+            "match": {
+              "requireUnique": true,
+              "minConfidence": 0.4,
+              "onMultiple": "fail"
+            }
+          },
+          "source": "text",
+          "into": "account_12345_balance",
+          "transforms": []
+        },
+        "risk": "safe",
+        "preconditions": [],
+        "postconditions": [],
+        "optional": false,
+        "timeoutMs": 15000,
+        "retry": {
+          "maxAttempts": 1,
+          "backoffMs": 500
+        },
+        "evidence": {
+          "screenshot": "on_failure"
+        }
+      }
+    ],
+    "checkpoint": {
+      "description": "Final screen reached: ParaBank | Accounts Overview",
+      "assert": {
+        "assert": "url_matches",
+        "pattern": "/parabank/overview\\.htm"
+      }
+    }
+  },
+  "recoveries": [],
+  "policy": {
+    "maxRisk": "reversible",
+    "requires": {
+      "origins": [
+        "http://localhost:8080"
+      ],
+      "pathPrefixes": [
+        "/parabank/"
+      ],
+      "actions": [
+        "type",
+        "click",
+        "read"
+      ],
+      "secrets": [
+        "tenant.parabank.operator_user",
+        "tenant.parabank.operator_password"
+      ]
+    },
+    "irreversibleStepPolicy": "require_human_confirmation",
+    "returnsDataClasses": [
+      "public",
+      "internal",
+      "pii"
+    ]
+  },
+  "escalation": {
+    "on": [
+      "locator_unresolved",
+      "locator_ambiguous",
+      "unknown_condition",
+      "recovery_exhausted"
+    ],
+    "holdSessionMs": 900000,
+    "allowResume": true
+  },
+  "provenance": {
+    "discoveryRunId": "run_mtzwn3f6",
+    "transcriptSha256": "5a0191d0b2a85c31adfb134c3845f6f046952caacd99891a5fc041f6d9764a3a",
+    "model": "gemini:gemini-3.6-flash",
+    "recordedAt": "2026-09-19T07:21:11.081Z",
+    "review": {
+      "status": "draft"
+    }
+  },
+  "integrity": {
+    "contentSha256": "0436afac1217d2b00bc492377cf800900d2cb2e91489bdd3695af9108a74814c"
+  }
+}
