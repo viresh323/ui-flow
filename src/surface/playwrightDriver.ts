@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import type { Browser, BrowserContext, ElementHandle, Frame, Locator as PwLocator, Page } from "playwright";
 import type { Locator } from "../artifact/index.js";
 import type {
@@ -47,8 +49,54 @@ export class PlaywrightDriver implements SurfaceDriver {
        * is the damage.
        */
       allowNavigation?: (url: string) => boolean;
+      /**
+       * When set, a still of the page is written here a few times a second for
+       * something else to show (the demo UI). It is taken by the process that
+       * owns the browser, through the same Playwright connection as everything
+       * else. A second DevTools client grabbing screenshots from outside was
+       * unreliable: Chrome can leave such a request unanswered while the page is
+       * blank or mid-navigation, which is most of a short run.
+       */
+      liveFrameFile?: string;
     },
   ) {}
+
+  private framesOn = false;
+  private frameLoop: Promise<void> | null = null;
+
+  /**
+   * Keep a current still of the page on disk. Reads the page directly rather
+   * than through activePage, so it keeps working while a person holds the
+   * session, and any failure (mid-navigation, closing) is just a skipped frame.
+   */
+  private startFrameWriter(file: string): void {
+    this.framesOn = true;
+    mkdirSync(dirname(file), { recursive: true });
+    this.frameLoop = (async () => {
+      while (this.framesOn) {
+        // A short timeout: a screenshot asked for mid-navigation just waits for
+        // the new page, and a long wait here meant the next frame arrived only
+        // after a short run had already finished.
+        await this.writeFrame(file, 800);
+        await new Promise((r) => setTimeout(r, 120));
+      }
+    })();
+  }
+
+  /** One still to disk. Any failure (mid-navigation, closing) is a skipped frame. */
+  private async writeFrame(file: string, timeout: number): Promise<void> {
+    const page = this.page;
+    if (!page) return;
+    try {
+      const still = await page.screenshot({ type: "jpeg", quality: 60, timeout });
+      const tmp = `${file}.part`;
+      writeFileSync(tmp, still);
+      // Swap in whole, so a reader never sees half a file.
+      renameSync(tmp, file);
+    } catch {
+      /* skip this frame */
+    }
+  }
 
   private get activePage(): Page {
     if (!this.page) throw new Error("driver not started — call start() first");
@@ -88,6 +136,7 @@ export class PlaywrightDriver implements SurfaceDriver {
       await this.close();
       throw error;
     }
+    if (this.opts.liveFrameFile) this.startFrameWriter(this.opts.liveFrameFile);
     logger.info(`[surface] session ${this.sessionId} started (cdp :${port})`);
     return { sessionId: this.sessionId, connectUrl: `http://127.0.0.1:${port}` };
   }
@@ -117,6 +166,18 @@ export class PlaywrightDriver implements SurfaceDriver {
   }
 
   async close(): Promise<void> {
+    if (this.framesOn && this.opts.liveFrameFile) {
+      // A run is often over within a second of its last page loading, so the
+      // loop may never have seen it. One last still of the final screen, taken
+      // before the browser goes, is what the live view should end on. The loop
+      // is stopped first so a frame it already had in flight cannot land after
+      // this one and leave the view on an older screen.
+      this.framesOn = false;
+      await this.frameLoop;
+      await this.writeFrame(this.opts.liveFrameFile, 1500);
+    }
+    this.framesOn = false;
+    this.frameLoop = null;
     try {
       await this.context?.close();
     } finally {
@@ -207,7 +268,15 @@ export class PlaywrightDriver implements SurfaceDriver {
     // Playwright's own locators auto-wait; the evaluate-based strategies do
     // not. Polling here keeps every strategy behaving the same way, and is what
     // absorbs the ordinary transient slowness of a server-rendered app.
-    while (!outcome.ok && outcome.reason === "not_found" && Date.now() < deadline) {
+    //
+    // "Ambiguous" is polled too, not only "not found". While a page is still
+    // loading, the best candidate (a header-based table cell) can find nothing
+    // yet while a looser fallback already matches several things, so the first
+    // look reports ambiguity for an element that is perfectly unique a moment
+    // later. Giving up there made a run's outcome depend on a few milliseconds
+    // of timing. A genuine ambiguity still fails closed: it simply does so when
+    // the wait runs out, not on the first look.
+    while (!outcome.ok && Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 150));
       outcome = await this.resolveOnce(locator, interpolate);
     }

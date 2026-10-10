@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative, resolve, sep } from "node:path";
 import { config as loadEnv } from "dotenv";
 
@@ -16,8 +17,8 @@ import { config as loadEnv } from "dotenv";
  * Three things come out of the child:
  *   - stderr log lines  -> streamed to the page as they happen (already redacted)
  *   - stdout            -> the replay result JSON, parsed when the run ends
- *   - the CDP port      -> printed in a log line; used to grab live frames of the
- *                          browser the run is driving, read-only
+ *   - live frames       -> the child's browser writes a still of the page to a
+ *                          temp file (UIFLOW_FRAME_FILE); /api/frame serves it
  *
  * Bound to 127.0.0.1 and never reads secrets: it does not expose .env, and the
  * only file paths it will serve are capability JSON under examples/ and runs/.
@@ -119,128 +120,6 @@ function listArtifacts(): ArtifactSummary[] {
 }
 
 // ---------------------------------------------------------------------------
-// live frames over CDP
-
-/**
- * Read-only screenshots of the browser a child run is driving. A second CDP
- * client is harmless to Playwright, and it works whoever currently owns the
- * session (automation or a human operator).
- */
-class CdpShooter {
-  private ws: any = null;
-  private nextId = 1;
-  private readonly pending = new Map<number, (m: any) => void>();
-  private connecting: Promise<void> | null = null;
-  private inflight: Promise<Buffer | null> | null = null;
-  private closed = false;
-  last: { buf: Buffer; at: number } | null = null;
-
-  constructor(readonly port: number) {}
-
-  private async connect(): Promise<void> {
-    // Neither step may wait forever: a hung connect would leave `connecting` and
-    // `inflight` set, and every later frame request would join the same stuck
-    // promise.
-    const targets = (await (
-      await fetch(`http://127.0.0.1:${this.port}/json/list`, { signal: AbortSignal.timeout(2000) })
-    ).json()) as Array<Record<string, string>>;
-    const page = targets.find((t) => t.type === "page");
-    if (!page?.webSocketDebuggerUrl) throw new Error("no page target yet");
-    const WS = (globalThis as any).WebSocket;
-    const ws = new WS(page.webSocketDebuggerUrl);
-    await new Promise<void>((ok, fail) => {
-      const timer = setTimeout(() => {
-        try {
-          ws.close();
-        } catch {
-          /* never opened */
-        }
-        fail(new Error("cdp socket timed out"));
-      }, 3000);
-      ws.onopen = () => {
-        clearTimeout(timer);
-        ok();
-      };
-      ws.onerror = () => {
-        clearTimeout(timer);
-        fail(new Error("cdp socket error"));
-      };
-    });
-    ws.onmessage = (e: { data: string }) => {
-      const m = JSON.parse(String(e.data));
-      this.pending.get(m.id)?.(m);
-      this.pending.delete(m.id);
-    };
-    ws.onclose = () => {
-      this.ws = null;
-      // Requests already sent will never be answered; fail them now rather than
-      // letting each wait out its own timeout.
-      for (const answer of this.pending.values()) answer({ error: { message: "cdp socket closed" } });
-      this.pending.clear();
-    };
-    this.ws = ws;
-  }
-
-  private send(method: string, params: object): Promise<any> {
-    return new Promise((ok, fail) => {
-      const id = this.nextId++;
-      const timer = setTimeout(() => {
-        this.pending.delete(id);
-        fail(new Error("cdp timeout"));
-      }, 4000);
-      this.pending.set(id, (m) => {
-        clearTimeout(timer);
-        m.error ? fail(new Error(m.error.message)) : ok(m.result);
-      });
-      this.ws.send(JSON.stringify({ id, method, params }));
-    });
-  }
-
-  /**
-   * Keep capturing while the run is alive. Replays last a few seconds, so
-   * waiting for the page to ask would miss the screen the run ends on; with
-   * this running, the last frame served is within a fraction of a second of it.
-   */
-  pump(): void {
-    void (async () => {
-      while (!this.closed) {
-        await this.frame();
-        await new Promise((r) => setTimeout(r, 120));
-      }
-    })();
-  }
-
-  /** At most one capture in flight; callers inside 120ms share the last one. */
-  frame(): Promise<Buffer | null> {
-    if (this.closed) return Promise.resolve(this.last?.buf ?? null);
-    if (this.last && Date.now() - this.last.at < 120) return Promise.resolve(this.last.buf);
-    this.inflight ??= (async () => {
-      try {
-        if (!this.ws) await (this.connecting ??= this.connect().finally(() => (this.connecting = null)));
-        const r = await this.send("Page.captureScreenshot", { format: "jpeg", quality: 70 });
-        this.last = { buf: Buffer.from(r.data, "base64"), at: Date.now() };
-        return this.last.buf;
-      } catch (e) {
-        if (process.env.UI_DEBUG) process.stderr.write(`[frame] ${(e as Error).message}\n`);
-        return this.last?.buf ?? null;
-      } finally {
-        this.inflight = null;
-      }
-    })();
-    return this.inflight;
-  }
-
-  close(): void {
-    this.closed = true;
-    try {
-      this.ws?.close();
-    } catch {
-      /* already gone */
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
 // the single active run
 
 type Ev = { n: number; t: number; kind: string; [k: string]: unknown };
@@ -256,7 +135,8 @@ interface Run {
   status: "running" | "ended" | "stopped";
   events: Ev[];
   child?: ChildProcess;
-  shooter?: CdpShooter;
+  /** Where the run's browser writes its latest still; served by /api/frame. */
+  frameFile: string;
   stdout: string;
   stderrTail: string;
   artifactPath?: string;
@@ -291,12 +171,6 @@ function onStderrLine(r: Run, raw: string): void {
   // One enormous line must not be held, and replayed to every page, in full.
   const msg = (m?.[3] ?? line).slice(0, 4000);
   push(r, "log", { level, msg });
-
-  const cdp = /\(cdp :(\d+)\)/.exec(msg);
-  if (cdp && !r.shooter) {
-    r.shooter = new CdpShooter(Number(cdp[1]));
-    r.shooter.pump();
-  }
 
   const handoff = /take control at (http:\/\/127\.0\.0\.1:\d+\/i\/[\w-]+)/.exec(msg);
   if (handoff) push(r, "handoff", { url: handoff[1] });
@@ -408,8 +282,14 @@ async function startRunLocked(body: any): Promise<Run> {
     throw new Error("mode must be discover or replay");
   }
 
+  const runId = `ui_${Date.now().toString(36)}`;
+  const frameFile = join(tmpdir(), `uiflow-frame-${runId}.jpg`);
+  // The previous run's last still is no longer wanted.
+  if (run) rmSync(run.frameFile, { force: true });
+
   const r: Run = {
-    id: `ui_${Date.now().toString(36)}`,
+    id: runId,
+    frameFile,
     seq: 0,
     mode: body.mode,
     label,
@@ -425,7 +305,13 @@ async function startRunLocked(body: any): Promise<Run> {
   // can be shown too when someone wants to see the real thing.
   const child = spawn(process.execPath, args, {
     cwd: ROOT,
-    env: { ...process.env, HEADLESS: body.showWindow ? "false" : "true", FORCE_COLOR: "0" },
+    env: {
+      ...process.env,
+      HEADLESS: body.showWindow ? "false" : "true",
+      FORCE_COLOR: "0",
+      // The run's browser writes its latest still here (see liveFrameFile).
+      UIFLOW_FRAME_FILE: frameFile,
+    },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
@@ -456,8 +342,7 @@ async function startRunLocked(body: any): Promise<Run> {
       }
     }
     push(r, "end", { code, stopped: r.status === "stopped", result, artifactPath: r.artifactPath });
-    // keep the last frame for the page; stop talking to a browser that is gone
-    setTimeout(() => r.shooter?.close(), 500);
+    // The last still stays on disk for the page to show until the next run.
   });
 
   return r;
@@ -547,6 +432,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   // refresh and wrong at the start of a recording. This forgets it.
   if (method === "POST" && path === "/api/reset") {
     if (run?.status === "running") return json(res, 409, { error: "a run is in progress; stop it first" });
+    if (run) rmSync(run.frameFile, { force: true });
     run = null;
     for (const c of clients) c.write(`data: ${JSON.stringify({ kind: "reset" })}\n\n`);
     return json(res, 200, { ok: true });
@@ -571,8 +457,13 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   }
 
   if (method === "GET" && path === "/api/frame") {
-    const buf = (await run?.shooter?.frame()) ?? null;
-    if (!buf) {
+    let buf: Buffer | null = null;
+    try {
+      buf = run ? readFileSync(run.frameFile) : null;
+    } catch {
+      /* no frame written yet */
+    }
+    if (!buf || buf.length === 0) {
       res.writeHead(204);
       res.end();
       return;

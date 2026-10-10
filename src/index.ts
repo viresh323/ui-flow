@@ -65,6 +65,7 @@ program
         headless: cfg.headless,
         baseUrl: cfg.tenant.baseUrl,
         allowNavigation: (url) => authorizeUrl(url, cfg.tenant).allowed,
+        liveFrameFile: process.env.UIFLOW_FRAME_FILE || undefined,
       }),
       stepIndex: 0,
       status: "running",
@@ -144,6 +145,7 @@ program
       headless: cfg.headless,
       baseUrl: cfg.tenant.baseUrl,
       allowNavigation: (url) => authorizeUrl(url, cfg.tenant).allowed,
+      liveFrameFile: process.env.UIFLOW_FRAME_FILE || undefined,
     });
     const evidenceDir = join(cfg.runsDir, `rp_${Date.now().toString(36)}`);
     const consolePort = opts.operator === true ? 8790 : Number(opts.operator);
