@@ -4,8 +4,9 @@ Write-up for the computer-use automation take-home. The README covers how to run
 it; this covers why it is shaped the way it is, and answers §3.7, which is
 design-only.
 
-Everything asserted here was verified against a live app. Where something is
-untested or unresolved I say so.
+Every PASS listing below was run against a live ParaBank. Sections 4 and 5
+are design arguments, not results, and say so; where something is untested,
+unbuilt or unresolved I name it.
 
 ---
 
@@ -40,8 +41,9 @@ important thing in the repo, and got the most design attention.
 This is the decision I would defend hardest.
 
 A step does not say "click `#loginBtn`". It carries an ordered list of candidate
-strategies, each with a confidence and a written rationale, and replay takes the
-first that resolves **uniquely**.
+strategies, each with a confidence and a written rationale. Replay walks them in
+order and takes the first that matches anything — and if that match is not
+unique, the step fails rather than falling through to a looser candidate.
 
 I did not arrive at this from first principles; the target app forced it. On
 ParaBank's login screen the obvious approach fails outright:
@@ -247,8 +249,10 @@ the multi-tenant story is validated until I have.
 
 ### Overlays, deliberately narrow
 
-Where a tenant genuinely differs, `TenantOverlay` patches the base rather than
-forking it. An overlay may:
+Where a tenant genuinely differs, a `TenantOverlay` patches the base rather than
+forking it. The schema is defined (`src/artifact/capability.ts`); the code that
+applies an overlay at invocation is **not built** — no run today loads one. An
+overlay may:
 
 - `retarget` one locator by id
 - adjust a `timeout`
@@ -291,9 +295,11 @@ that noise properly before trusting a threshold.
 Thousands of app instances means the registry, not the artifact, does the work:
 capabilities keyed by `(product, version range)`, overlays keyed by
 `(tenant, capability)`, resolved at invocation. Promotion is per artifact
-version with `provenance.review.status` gating production use — a capability a
-model wrote is a `draft` until a person signs it off, and the compiler never
-emits anything else.
+version, with `provenance.review.status` meant to gate production use — a
+capability a model wrote is a `draft` until a person signs it off, and the
+compiler never emits anything else. Today that status is recorded and shown, not
+enforced: replay will run a draft. The gate belongs in the registry, which does
+not exist yet.
 
 ---
 
@@ -307,8 +313,22 @@ emits anything else.
   not good enough on its own.
 - **Irreversible steps require a human by default.** Money movement, account
   creation, anything not undoable from the UI. Blocking is recoverable; a wrong
-  transfer is not. *(Implemented and gated; not yet exercised by a capability —
-  see §8.)*
+  transfer is not. Exercised end to end by a second, discovered write flow
+  (`examples/discovered-write/open_savings_account.json`, `npm run
+  confirm-check`): the run suspends at the submit step, an operator approves,
+  and the account is opened.
+
+  ```
+  PASS  raised for the right reason (irreversible_step)
+  PASS  stopped at the submit step (click_6)
+  PASS  control handed to the operator
+  PASS  run completed after authorisation (success)
+  PASS  the reviewer's note is on the result
+  PASS  a real account was opened (13566)
+  ```
+
+  Only the default policy (`require_human_confirmation`) is run live; `block`
+  and `allow_with_audit` are covered by unit tests (`tests/policy.test.ts`).
 - **Secrets are references, not values.** An artifact carries
   `{from: "secret", secret: "tenant.parabank.operator_password"}`. There is no
   field in the schema where a credential could be written, so §3.4 is satisfied
@@ -332,7 +352,8 @@ sides can act is worse than one where neither can.
 
 Ownership is single-valued and enforced by the driver. `cedeControl()` flips one
 marker; from that instant every automation entry point throws, and only
-`operatorClick` / `operatorType` / `operatorPress` / `operatorNavigate` work.
+`operatorClick` / `operatorType` / `operatorPress` / `operatorNavigate` work
+(plus read-only `operatorScreenshot` / `operatorUrl` for the console).
 They are mirror images gated in opposite directions.
 
 The browser is never torn down — same tab, same cookies, same half-filled form.
@@ -347,7 +368,9 @@ One intervention per step. If the same step stops again after a human touched
 it, their fix did not work, and looping them is worse than failing.
 
 Verified with the realistic failure — a rotated password, login refused, a human
-signs in by hand, the run completes:
+signs in by hand, the run completes (excerpt of `npm run handoff-check --
+examples/discovered/read_account_balance_v2.json`; the default hand-written
+artifact names its output `balance`):
 
 ```
 PASS  automation is locked out during the handoff
@@ -370,16 +393,26 @@ co-browsing console does too, just at 30fps over WebRTC instead of on refresh.
 Stated plainly, because a gap I have named is cheaper for a reviewer than one
 they find.
 
-- **Recoveries are declared but never triggered.** `SESSION_EXPIRED` and
-  `TRANSIENT_APP_ERROR` sit in the example artifact untested. The fault-injection
-  proxy that would exercise them (~50 lines between runner and container) was
-  designed and not built. This is the gap I would close first: the brief is
-  emphatic that runtime conditions are the interesting failures.
-- **The irreversible-step gate is untested.** `authorizeStep` blocks money
-  movement pending confirmation, but no capability exercises it. A second
-  discovered flow — "open a new savings account, stop at the confirmation
-  screen" — would prove it and would also make the schema look less fitted to
-  one example.
+- **Recoveries are barely exercised.** `SESSION_EXPIRED` fires only
+  incidentally: in `handoff-check` a refused login lands back on the login
+  screen, which its detector matches, so the re-enter path runs. No test causes a
+  genuine session drop, and `TRANSIENT_APP_ERROR` never fires. The
+  fault-injection proxy that would exercise them (~50 lines between runner and
+  container) was designed and not built. This is the gap I would close first:
+  the brief is emphatic that runtime conditions are the interesting failures.
+- **Tenant overlays are schema only.** `TenantOverlay` is defined and validated;
+  nothing applies one at invocation (§5).
+- **Review status is not enforced.** A `draft` artifact replays exactly like an
+  `approved` one; the status is recorded and displayed, not checked (§5).
+- **The write flow has an unwired input.** `open_savings_account` declares
+  `funding_account_id`, but no step selects the funding account, so the form's
+  default pays whatever value is passed. Discovery saw "12345" once and made it
+  a parameter without wiring it to anything — exactly why a discovered
+  capability stays a draft until a person reviews it.
+- **An irreversible step done by hand is not detected.** If the operator submits
+  the form themselves instead of approving, the resumed run fails on the step it
+  expected to do. The console steers approvals away from this; the engine does
+  not check.
 - **`flow.steps` is a flat list.** No loops, no branches. "Read the balance for
   every account" cannot be expressed. Deliberate: a step list is reviewable by a
   human in a way a small programming language is not. It is also the thing most
@@ -399,9 +432,9 @@ In order:
 
 1. Fault injection, so the recoverable branch is demonstrated rather than
    declared.
-2. A second capability covering a write flow, to exercise the irreversible gate
-   and to pressure-test the schema against a second shape.
+2. Apply overlays and enforce review status at invocation — small, and they
+   turn two schema promises into behaviour.
 3. The two-tenant experiment — one artifact, two ParaBank instances — to turn
    §5 from an argument into a result.
-5. A `uia` driver skeleton, far enough to prove the seam holds rather than to
+4. A `uia` driver skeleton, far enough to prove the seam holds rather than to
    ship desktop support.

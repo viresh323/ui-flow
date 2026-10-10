@@ -120,8 +120,9 @@ has no accessible name. The label is a bold paragraph sitting next to it. So
 
 The same mechanism is the multi-tenant answer: a rebrand breaks the text-based
 candidates but not the structural ones, and an older version breaks CSS but not
-the label. One recording per vendor product, with `TenantOverlay` patching the
-one locator that differs rather than forking the flow.
+the label. One recording per vendor product, with a `TenantOverlay` patching the
+one locator that differs rather than forking the flow (the overlay schema exists;
+applying one at run time is not built yet).
 
 Every run reports **which candidate index won**. Rising indices across runs are
 drift showing up before it becomes an outage.
@@ -293,6 +294,9 @@ the server's own `retryDelay` on a 429.
 - If an operator performs an irreversible step by hand instead of approving it, the
   resumed run does not notice and fails on the step it expected to do itself.
   The console now steers approvals away from this, but the engine does not detect it.
+- `TenantOverlay` is schema only. Nothing applies an overlay at run time.
+- Review status is recorded, not enforced: replay runs a `draft` capability the
+  same as an `approved` one.
 - Web only. The desktop driver is designed for, not built.
 
 ## Future state
